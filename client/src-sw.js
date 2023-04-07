@@ -1,73 +1,57 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const WebpackPwaManifest = require('webpack-pwa-manifest');
-const path = require('path');
-const { InjectManifest } = require('workbox-webpack-plugin');
+const { offlineFallback, warmStrategyCache } = require('workbox-recipes');
+const { CacheFirst, StaleWhileRevalidate } = require('workbox-strategies');
+const { registerRoute } = require('workbox-routing');
+const { CacheableResponsePlugin } = require('workbox-cacheable-response');
+const { ExpirationPlugin } = require('workbox-expiration');
+const { precacheAndRoute } = require('workbox-precaching/precacheAndRoute');
 
-module.exports = () => {
-  return {
-    mode: 'development',
-    entry: {
-      main: './src/js/index.js',
-      install: './src/js/install.js'
-    },
-    output: {
-      filename: '[name].bundle.js',
-      path: path.resolve(__dirname, 'dist'),
-    },
+precacheAndRoute(self.__WB_MANIFEST);
+
+const pageCache = new CacheFirst({
+  cacheName: 'page-cache',
+  plugins: [
+    new CacheableResponsePlugin({
+      statuses: [0, 200],
+    }),
+    new ExpirationPlugin({
+      maxAgeSeconds: 30 * 24 * 60 * 60,
+    }),
+  ],
+});
+
+warmStrategyCache({
+  urls: ['/index.html', '/'],
+  strategy: pageCache,
+});
+
+registerRoute(({ request }) => request.mode === 'navigate', pageCache);
+
+// Set up asset cache
+
+registerRoute(
+  
+  // Here we define the callback function that will filter the requests we want to cache
+
+
+  ({ request }) => ['style', 'script', 'worker'].includes(request.destination),
+  new StaleWhileRevalidate({
+
+    // Name of the cache storage
+
+
+    cacheName: 'asset-cache',
     plugins: [
-      // Add webpack plugin that generates our html file and injects our bundles.
-      new HtmlWebpackPlugin({
-        template: './index.html',
-        title: 'Just Another Text Editor'
-      }),
 
-      // Add webpack plugin that injects our custom service worker.
-      new InjectManifest({
-        swSrc: './src-sw.js',
-        swDest: 'src-sw.js',
+      // This plugin will cache responses with these headers to a maximum-age of 30 days
+
+
+      new CacheableResponsePlugin({
+        statuses: [0, 200],
       }),
-      
-      // Add webpack plugin that creates a manifest.json file.
-      new WebpackPwaManifest({
-        fingerprints: false,
-        inject: true,
-        name: 'Just Another Text Editor',
-        short_name: 'J.A.T.E',
-        description: 'Takes notes with JavaScript syntax highlighting!',
-        background_color: '#225ca3',
-        theme_color: '#225ca3',
-        start_url: './',
-        publicPath: './',
-        icons: [
-          {
-            src: path.resolve('src/images/logo.png'),
-            sizes: [96, 128, 192, 256, 384, 512],
-            destination: path.join('assets', 'icons'),
-          },
-        ],
-      }),
+      new ExpirationPlugin({
+        maxEntries: 60,
+        maxAgeSeconds: 30 * 24 * 60 * 60,
+      })
     ],
-
-    module: {
-      rules: [
-        // Instruct webpack to use the css-loader for every .css file.
-        {
-          test: /\.css$/i,
-          use: ['style-loader', 'css-loader'],
-        },
-        // Instruct webpack to use babel-loader in order to use ES6
-        {
-          test: /\.m?js$/,
-          exclude: /node_modules/,
-          use: {
-            loader: 'babel-loader',
-            options: {
-              presets: ['@babel/preset-env'],
-              plugins: ['@babel/plugin-proposal-object-rest-spread', '@babel/transform-runtime'],
-            },
-          },
-        },
-      ],
-    },
-  };
-};
+  })
+);
