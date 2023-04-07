@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a text editor Progressive Web Application that runs in the browser where user can create notes or code snippets with or without an internet connection. The content in the text editor is saved with IndexedDB so that it can be retrieved when the app is closed and reopened. User can also download the web app as an icon on desktop. The app is using a package called `idb` to store and retrieve data and using workbox service worker to have static assets pre cached upon loading along with subsequent pages and static assets.
+web app that lets developers create and store notes or code snippets offline or online. JATE is built with next-gen JavaScript and uses IndexedDB to store content, which is automatically retrieved when the editor is reopened. It also offers the option to download the app as an icon on the desktop and pre-caches static assets with a registered service worker upon loading.
 
 ## Installation
 - Install [Node.js v16](https://nodejs.org/en/blog/release/v16.16.0/) and [npm](https://www.npmjs.com/)
